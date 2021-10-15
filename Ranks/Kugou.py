@@ -9,6 +9,7 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
+#表头
 header = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                   'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -16,7 +17,7 @@ header = {
 }
 a = []
 
-
+#获取标题，时间
 def get_info(url):
     wb_data = requests.get(url, headers=header)
     soup = BeautifulSoup(wb_data.text, 'lxml')
@@ -31,11 +32,12 @@ def get_info(url):
             'song': strl[-1],
             'time': time.get_text().strip()
         }
+        #追加数据
         a.append(data)
         print(data)
 
-
 if __name__ == '__main__':
+    #位置在酷狗音乐排行榜单
     urls = [
         'https://www.kugou.com/yy/rank/home/{}.8888.html'.format(str(i) for i in range(1, 2))
     ]
