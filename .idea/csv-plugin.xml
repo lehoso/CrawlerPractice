@@ -17,14 +17,14 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\DataCleaning\test2.csv">
+        <entry key="\DataShow\data.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
             </Attribute>
           </value>
         </entry>
-        <entry key="\DataCleaning\test3.csv">
+        <entry key="\shanghai\data\house_data.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
