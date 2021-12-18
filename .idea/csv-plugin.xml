@@ -17,6 +17,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\DataCleaning\test3.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\DataShow\data.csv">
           <value>
             <Attribute>
@@ -24,7 +31,21 @@
             </Attribute>
           </value>
         </entry>
-        <entry key="\shanghai\data\house_data.csv">
+        <entry key="\chongqing\lianjia\GraphicsPractice\cq_pre-owned_house2.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\chongqing\lianjia\cq_pre-owned_house.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\chongqing\lianjia\cq_pre-owned_house2.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
