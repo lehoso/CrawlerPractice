@@ -16,11 +16,11 @@ res = conn.getresponse()
 data = res.read()
 # 将HTML内容保存为data.html文件
 html_content = data.decode("utf-8")
-with open("355338.html", "w", encoding="utf-8") as file:
+with open("../WebCrawler/355338.html", "w", encoding="utf-8") as file:
     file.write(html_content)
 
 # 使用BeautifulSoup解析保存的HTML文件
-with open("355338.html", "r", encoding="utf-8") as file:
+with open("../WebCrawler/355338.html", "r", encoding="utf-8") as file:
     soup = BeautifulSoup(file, 'lxml')
 
 # 使用CSS选择器提取每个div:nth-child中的a标签的href属性
