@@ -1,8 +1,10 @@
 import http.client
 import re
 import time
+from urllib.parse import urlparse
 
 import pandas as pd
+import requests
 from bs4 import BeautifulSoup
 
 '''
@@ -14,13 +16,14 @@ a = []
 
 def get_detail(city, url):
     print("当前链接：" + url)
-    conn = http.client.HTTPSConnection("heb.anjuke.com")
+    parsed_url = urlparse(url)
+    conn = http.client.HTTPSConnection(parsed_url.hostname)
     payload = ''
     headers = {
-        'Cookie': 'xxzlxxid=pfmxR+94+OV9CbCo7QUVMJ5AXt+MaBFd0vb76A58s9iZSTZ+fJHZqJMG5UMzPqfh8aXc',
+        'Cookie': 'sessid=B8EDC173-F262-AA43-02EF-FF82950E2BD9; aQQ_ajkguid=B937A289-AAD3-C14A-311C-E38CC41A793B; twe=2; ajk-appVersion=; id58=CrIW6mZf7liYqGPjGb93Ag==; isp=true; 58tj_uuid=da66cb15-a4f9-4ce6-b201-ed4afc2a4aac; xxzlclientid=c9503abf-1d2c-418c-b736-1717563229691; xxzlxxid=pfmxR+94+OV9CbCo7QUVMJ5AXt+MaBFd0vb76A58s9iZSTZ+fJHZqJMG5UMzPqfh8aXc; als=0; lps=https%3A%2F%2Fheb.zu.anjuke.com%2F%3Ffrom%3DHomePage_TopBar%7Chttps%3A%2F%2Fheb.anjuke.com%2F; cmctid=202; xxzlbbid=pfmbM3wxMDM1MXwxLjguMXwxNzE3NTczMzI2ODkyfG52MmsrQzRxRVd0MDBRUlJqbXl4eGhSMzQzU1poRk1UL2J2UTIyc1B3d3c9fDM1YWNjNWNhYzNhODc5YzA1MGFiNDQ3YjkzYzEzMTE4XzE3MTc1NzMzMzI1ODFfZmJhMGY5NTYzODdhNDAwODk1ZTg4YzQ3ZDlkNzRlZjVfMTAzMTg0ODczM3w3YzUwNWQ2N2E5YTJmMGM1ODk3ZWQ1Yjk3YzQyMzUyY18xNzE3NTczMzI2NDEyXzI1Ng==; ajk_member_verify=ZtrRHaydORjVQQetzDoL0XZIcdPlU5pHNf3lLFLu%2BQE%3D; ajk_member_verify2=MjIxMzk0MzI4fG00ZmRFOWp8MQ%3D%3D; ajk_member_id=221394328; _ga=GA1.2.191220906.1717596493; new_uv=5; _ga_DYBJHZFBX2=GS1.2.1717683580.4.0.1717683580.0.0.0; fzq_h=5643a6d45f8670914b51a805ef3818e8_1717849347990_0c0b6c8be6c34b5b9980c3ddd74a1f93_1031848733; ctid=205; fzq_js_anjuke_ershoufang_pc=c94259d220e5d2c2cfcf68d27e252357_1717855659653_25; obtain_by=2; xxzl_cid=38d85cfe6dec4298be0f4acaa3f6924a; xxzl_deviceid=79zLeHNhROJJUjkSislV8bFzRvMJfksQ5xOYOZKGKJjNWvJlHleqo/irvPnNNzrb; ajkAuthTicket=TT=fc173b2c99a2f1b982ade3fe69c8cb2c&TS=1717855674576&PBODY=gFeTnb7UZTEyhztZXLAbCa_CetQ8FjkyNwUmm8JaFVeFEwUOAhCQ9_wk8kOEVvbdju8w9nRQvdHs6j7-JOa3o4VP8XpidXqRtJHr-NcdgAWEcWON-XeMvL8EegVc5jmb0dZzByJ_IFQ6Md1FW80I9R0nLeiERJDBQq0NSMx1dCE&VER=2&CUID=4eGSxIUoYdqQQOls3Krf9aS2r3T3qS61; fzq_js_anjuke_xiaoqu_pc=9f0bf8d40423cb275f5baa413196c3bd_1717855665825_24',
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Accept': '*/*',
-        'Host': 'heb.anjuke.com',
+        'Host': parsed_url.hostname,
         'Connection': 'keep-alive'
     }
     # conn.request("GET",
@@ -64,6 +67,8 @@ def get_detail(city, url):
     floors = floors.text if floors != None != 0 else ''
     # 使用正则表达式提取括号内和括号外的字符
     match = re.match(r'([^()]+)\(([^()]+)\)', floors)
+    outside = ''
+    inside = ''
     if match:
         outside, inside = match.groups()
         # 所在层
@@ -71,6 +76,7 @@ def get_detail(city, url):
     # 总层数
     #  print("总共层数:", inside)
     else:
+        inside = floors
         print("未匹配到有效格式的字符串")
     # 房屋户型
     house_type = soup.find('div', class_='maininfo-model-strong')
@@ -216,81 +222,87 @@ def get_detail(city, url):
     a.append(data)
     print(data)
 
+error_data = []
 
-def info():
-    conn = http.client.HTTPSConnection("heb.anjuke.com")
-    payload = ''
+
+def get_community_html(url, city_name):
+    payload = {}
+    parsed_url = urlparse(url)
     headers = {
-        'Cookie': 'Cookie=aQQ_ajkguid=91B5999B-22B8-4250-B6CD-415A201678F4; sessid=B3C5073A-2F0C-4920-8D86-6580E617F88E; ajk-appVersion=; ctid=48; fzq_h=053b1eee8d9988868436ada9d14bd4c2_1717571528615_626e4d04f9164ef296613f29c237103a_1031848733; obtain_by=2; twe=2; id58=CroD4GZgD8hGvowwHTQ8Ag==; xxzlclientid=e6c5cb6b-9400-4627-8b46-1717571523594; xxzlxxid=pfmxR+94+OV9CbCo7QUVMJ5AXt+MaBFd0vb76A58s9iZSTYCa50BAHB8ayLEi7F5KJtz; xxzlbbid=pfmbM3wxMDM1MXwxLjguMHwxNzE3NTcxNTI0NTYxfDlYY29qZjZYUmhCTVZ6L21ZMHhtWTBtRmNKZkJMekQxbzFzUkhrNEpaZDA9fGEyYjk5NWVkOTExYWIwMjA2MDExYzA3NDFlZjFiMDMxXzE3MTc1NzE1Mjk2MDNfYzRhNTdhNzNkNzc0NDYwZWI0OWI0NDZjMGZiN2U0MzdfMTAzMTg0ODczM3xjYzEzZjk2MTQ2MzZlYzc0ZmZmYzgyN2Q2MTE3YTFjMV8xNzE3NTcxNTIzNDY3XzI1NA==; ajk_member_verify=ZtrRHaydORjVQQetzDoL0XZIcdPlU5pHNf3lLFLu%2BQE%3D; ajk_member_verify2=MjIxMzk0MzI4fG00ZmRFOWp8MQ%3D%3D; 58tj_uuid=047cd729-23b4-42d7-acf7-0bc41f85b9dc; new_session=1; init_refer=https%253A%252F%252Fheb.anjuke.com%252F; new_uv=1; _ga=GA1.2.1311648480.1717571551; _gid=GA1.2.900944922.1717571551; _gat=1; _ga_DYBJHZFBX2=GS1.2.1717571551.1.0.1717571551.0.0.0; als=0; fzq_js_anjuke_ershoufang_pc=a34fe04c32582f523a2c692f74bffc79_1717571555132_25; ajk_member_id=221394328; xxzl_cid=bc86a498670945cc8d3878d8e68c5afb; xxzl_deviceid=AN1gYk3DOg7Cp1YT1lVGWtA/GzNOh0xDybmXAyGsDCqYo3/D+ynyNRilOPFTN0zM; ajkAuthTicket=TT=2f996fae8456da4c9ff0e2e228bed376&TS=1717571572431&PBODY=WX8EhF7jmPt0p-BIwm0okq9-nDKMSYzo33_ZOhTUFM9HC0xnxM18xQ7QWY9Ch3t-xqCd9rEnVLiT4uChg6_BzF-uf9J0njGI9synWb_EdWMrqaWOdFk4xnja66RwsZO5DbVVPpsIcDN8pNjrK_MXcUjVOn2_8zKYmzAqJDo38cg&VER=2&CUID=4eGSxIUoYdqQQOls3Krf9aS2r3T3qS61; fzq_js_anjuke_xiaoqu_pc=046406a3e06dcb6a6db0b0b827809fcd_1717571566779_24; aQQ_ajkguid=8E0AA674-C7C3-4D92-B008-FE8F310A6559; sessid=1037C4F8-0443-4F52-BB83-5A596414FEC9; ajk-appVersion=; ctid=48; fzq_h=d16b54e375f842d6cd02e3fe08661213_1717564406398_3c4044d7a053401289bf461b8862961b_1031848733; obtain_by=2; twe=2; id58=CrIej2ZgENJZX815HXzuAg==; ajkAuthTicket=TT=2f996fae8456da4c9ff0e2e228bed376&TS=1717571820293&PBODY=DOcGGTBbJRmhb2LmcKcFueQsRSov146pAfprKTaNOKfvx5XGjnZnVIwthONcYGq2-ET0pRqqUyoktNert_NB-6NY4Wy74csW0xQ_E4VicgpV8Dysl-_MDRfFkfFaPLX4fEyWhygZiTme-gYmSUMb0FNNSERB50uDpBeobaz_WDw&VER=2&CUID=4eGSxIUoYdqQQOls3Krf9aS2r3T3qS61',
+        'Cookie': 'sessid=B8EDC173-F262-AA43-02EF-FF82950E2BD9; aQQ_ajkguid=B937A289-AAD3-C14A-311C-E38CC41A793B; twe=2; ajk-appVersion=; id58=CrIW6mZf7liYqGPjGb93Ag; isp=true; 58tj_uuid=da66cb15-a4f9-4ce6-b201-ed4afc2a4aac; xxzlclientid=c9503abf-1d2c-418c-b736-1717563229691; xxzlxxid=pfmxR+94+OV9CbCo7QUVMJ5AXt+MaBFd0vb76A58s9iZSTZ+fJHZqJMG5UMzPqfh8aXc; als=0; lps=https%3A%2F%2Fheb.zu.anjuke.com%2F%3Ffrom%3DHomePage_TopBar%7Chttps%3A%2F%2Fheb.anjuke.com%2F; cmctid=202; xxzlbbid=pfmbM3wxMDM1MXwxLjguMXwxNzE3NTczMzI2ODkyfG52MmsrQzRxRVd0MDBRUlJqbXl4eGhSMzQzU1poRk1UL2J2UTIyc1B3d3c9fDM1YWNjNWNhYzNhODc5YzA1MGFiNDQ3YjkzYzEzMTE4XzE3MTc1NzMzMzI1ODFfZmJhMGY5NTYzODdhNDAwODk1ZTg4YzQ3ZDlkNzRlZjVfMTAzMTg0ODczM3w3YzUwNWQ2N2E5YTJmMGM1ODk3ZWQ1Yjk3YzQyMzUyY18xNzE3NTczMzI2NDEyXzI1Ng; ajk_member_verify=ZtrRHaydORjVQQetzDoL0XZIcdPlU5pHNf3lLFLu%2BQE%3D; ajk_member_verify2=MjIxMzk0MzI4fG00ZmRFOWp8MQ%3D%3D; ajk_member_id=221394328; _ga=GA1.2.191220906.1717596493; new_uv=5; _ga_DYBJHZFBX2=GS1.2.1717683580.4.0.1717683580.0.0.0; fzq_h=5643a6d45f8670914b51a805ef3818e8_1717849347990_0c0b6c8be6c34b5b9980c3ddd74a1f93_1031848733; ctid=128; obtain_by=2; xxzl_cid=38d85cfe6dec4298be0f4acaa3f6924a; xxzl_deviceid=79zLeHNhROJJUjkSislV8bFzRvMJfksQ5xOYOZKGKJjNWvJlHleqo/irvPnNNzrb; ajkAuthTicket=TT; fzq_js_anjuke_xiaoqu_pc=b869cfca75f455493308e7772d5b971b_1717853899237_24; ctid=205; aQQ_ajkguid=B937A289-AAD3-C14A-311C-E38CC41A793B; obtain_by=2; twe=2; sessid=1CA556AA-0360-4EC5-B7D9-3B9F96C5F5B7; ajk-appVersion=; fzq_h=e04a35c04b5ad936b524b6e516f1c2f7_1717853894654_9158aa5c971e478999fb791e178f7c7c_1031848733; id58=CrIclWZkXsZ5732JXqwFAg==',
         'User-Agent': 'Apifox/1.0.0 (https://apifox.com)',
         'Accept': '*/*',
-        'Host': 'heb.anjuke.com',
+        'Host': parsed_url.hostname,
         'Connection': 'keep-alive'
     }
-    conn.request("GET", "/community/props/sale/355338", payload, headers)
-    res = conn.getresponse()
-    data = res.read()
-    # 将HTML内容保存为data.html文件
-    html_content = data.decode("utf-8")
-    # with open("355338.html", "w", encoding="utf-8") as file:
-    #     file.write(html_content)
-    #
-    # # 使用BeautifulSoup解析保存的HTML文件
-    # with open("355338.html", "r", encoding="utf-8") as file:
-    #     soup = BeautifulSoup(file, 'lxml')
+    response = requests.request("GET", url, headers=headers, data=payload)
+    html_content = response.text
     soup = BeautifulSoup(html_content, 'lxml')
-
-    # 使用CSS选择器提取每个div:nth-child中的a标签的href属性
     selector = "#__layout > div > section > section.list-main > section > section:nth-child(2) > div:nth-child(n) > a"
     tags = soup.select(selector)
 
+    community_detail = 0
     # 输出每个匹配的a标签的href属性
     for tag in tags:
         if tag and 'href' in tag.attrs:
             href = tag['href']
-            get_detail('哈尔滨', href)
-            # print(href)
-            time.sleep(5)
+            print(f'要抓取的链接：{href}')
+            retries = 5
+            while retries > 0:
+                try:
+                    get_detail(city_name, href)
+                    break
+                except Exception as e:
+                    retries -= 1
+                    print(f'获取{row["城市"]}第{href}链接。重试中...（剩余重试次数：{retries}）')
+                    error_data.append(href)
+                    print(f'异常信息：{e}')
+            community_detail += 1
         else:
             print("未找到标签或标签不包含href属性。")
+    return community_detail
 
+
+not_data = []
 
 if __name__ == '__main__':
-    # url = 'https://heb.anjuke.com/prop/view/S2754299020782597?auction=221&hpType=27&entry=136&position=20&kwtype=comm_one&now_time=1717596519&spread=commsearch_c&epauction=&stats_key=f1448ac6-7fbd-4b2f-9a8b-fb6b449ddba2_20&from=PC_COMM_ESF_LIST_CLICK&index=20'
-    # get_detail('哈尔滨', url)
-    info()
+    df = pd.read_excel('可读城市.xlsx')
+    for index, row in df.iterrows():
+        # 总条数
+        total = row["总数"]
+        # 获取的总数
+        get_community_total = 0
+        print(f'城市：{row["城市"]}，链接：{row["链接"]}，总数{total}')
+        page_num = 1
+        for page in range(0, 50):
+            if get_community_total != 0 and get_community_total >= total:
+                break
+            # 每个小区的详情
+            url = row["链接"] + 'p' + str(page_num)
+            retries = 5
+            while retries > 0:
+                try:
+                    # 该分页获取的总数
+                    community_detail = get_community_html(url, row["城市"])
+                    # 每页数据获取
+                    print(f'页数：{page_num}，已获取条数{community_detail}')
+                    if int(community_detail) == 0:
+                        not_data.append(url)
+                    get_community_total += community_detail
+                    page_num += 1
+                    break
+                except Exception as e:
+                    retries -= 1
+                    print(f'获取{row["城市"]}第{page_num}页数据时发生错误。重试中...（剩余重试次数：{retries}）')
+                    print(f'异常信息：{e}')
+
+    # info()
     # print(a)
-    df_out = pd.DataFrame(a, columns=['房屋编码',
-                                      '城市',
-                                      '行政区',
-                                      '所属区域',
-                                      '小区名称',
-                                      '地址',
-                                      '建筑面积（㎡）',
-                                      '所在层',
-                                      '总层数',
-                                      '房屋户型',
-                                      '户型结构',
-                                      '房屋结构',
-                                      '装修状况',
-                                      '建筑形式',
-                                      '房屋用途',
-                                      '建成年份',
-                                      '房屋朝向',
-                                      '楼户比例',
-                                      '发布时间',
-                                      '更新时间',
-                                      '经纪公司',
-                                      '经纪人',
-                                      '房本年限',
-                                      '产权所属',
-                                      '产权类型',
-                                      '有无大税',
-                                      '房龄',
-                                      '小区户数',
-                                      '物业类型',
-                                      '房屋售价（万元）',
-                                      '单价（元 /㎡）',
-                                      '链接地址'
+    df_out = pd.DataFrame(a, columns=['房屋编码', '城市', '行政区', '所属区域', '小区名称', '地址', '建筑面积（㎡）', '所在层', '总层数', '房屋户型',
+                                      '户型结构', '房屋结构', '装修状况', '建筑形式', '房屋用途', '建成年份', '房屋朝向', '楼户比例', '发布时间',
+                                      '更新时间', '经纪公司', '经纪人', '房本年限', '产权所属', '产权类型', '有无大税', '房龄', '小区户数',
+                                      '物业类型', '房屋售价（万元）', '单价（元 /㎡）', '链接地址'
                                       ])
     df_out.to_excel('测试数据demo.xlsx')
+    print(f'空数据：{not_data}')
+    print(f'链接获取错误数据：{error_data}')
