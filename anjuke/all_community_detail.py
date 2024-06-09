@@ -96,6 +96,6 @@ if __name__ == '__main__':
                     print(f'异常信息：{e}')
             # time.sleep(1)
     df_out = pd.DataFrame(a, columns=['城市', '小区', '链接', '标题'])
-    df_out.to_excel('每个小区的所有二手房连接.xlsx')
+    df_out.to_excel('小区二手房大于100的小区.xlsx')
     print(f'空数据：{not_data}')
     print(f'链接获取错误数据：{error_data}')
