@@ -53,7 +53,6 @@ def get_community_html(url, city_name, community_name):
                 except Exception as e:
                     retries -= 1
                     print(f'获取{row["城市"]}第{href}链接。重试中...（剩余重试次数：{retries}）')
-                    error_data.append(href)
                     print(f'异常信息：{e}')
             community_detail += 1
         else:
@@ -64,7 +63,7 @@ def get_community_html(url, city_name, community_name):
 not_data = []
 
 if __name__ == '__main__':
-    df = pd.read_excel('所有小区.xlsx')
+    df = pd.read_excel('所有小区_小于100.xlsx')
     for index, row in df.iterrows():
         # 总条数
         total = row["总数"]
@@ -72,12 +71,14 @@ if __name__ == '__main__':
         get_community_total = 0
         print(f'城市：{row["城市"]}，链接：{row["链接"]}，小区名{row["小区名"]}，总数{total}')
         page_num = 1
+        isBreak = False
         for page in range(0, 50):
             if get_community_total != 0 and get_community_total >= total:
                 break
             # 每个小区的详情
             url = row["链接"] + 'p' + str(page_num)
-            retries = 5
+            retries = 3
+
             while retries > 0:
                 try:
                     # 该分页获取的总数
@@ -85,17 +86,23 @@ if __name__ == '__main__':
                     # 每页数据获取
                     if int(community_detail) == 0:
                         not_data.append(url)
-                        raise Exception("发现空数据。可能需要验证")
+                        if not isBreak:
+                            raise Exception("发现空数据。可能需要验证")
                     get_community_total += community_detail
-                    print(f'页数：{page_num}，已获取条数{community_detail},已获取总条数：{get_community_total}，全部总条数：{total}')
+                    print(
+                        f'页数：{page_num}，已获取条数{community_detail},已获取总条数：{get_community_total}，全部总条数：{total}')
                     page_num += 1
+                    isBreak = False
                     break
                 except Exception as e:
                     retries -= 1
+                    if retries == 0:
+                        error_data.append(url)
+                        isBreak = True
                     print(f'获取{row["城市"]}第{page_num}页数据时发生错误。重试中...（剩余重试次数：{retries}）')
                     print(f'异常信息：{e}')
-            # time.sleep(1)
+                    time.sleep(3)
     df_out = pd.DataFrame(a, columns=['城市', '小区', '链接', '标题'])
-    df_out.to_excel('小区二手房大于100的小区.xlsx')
+    df_out.to_excel('小区二手房小于100的小区.xlsx')
     print(f'空数据：{not_data}')
     print(f'链接获取错误数据：{error_data}')
