@@ -24,9 +24,8 @@ def get_detail(city, url, proxy):
         'Connection': 'keep-alive'
     }
 
-    conn = http.client.HTTPSConnection(parsed_url.hostname)
-    # conn = http.client.HTTPSConnection(proxy)
-    # conn.set_tunnel(parsed_url.hostname)  # 设置隧道连接到目标主机
+    conn = http.client.HTTPSConnection(proxy)
+    conn.set_tunnel(parsed_url.hostname)  # 设置隧道连接到目标主机
     conn.request("GET", url, headers=headers)
     res = conn.getresponse()
     data = res.read()
@@ -199,11 +198,11 @@ def main(file_path):
 
     with ProcessPoolExecutor() as process_executor:
         futures = []
-        for i in range(0, len(data_list), 15):
-            split_data = data_list[i:i + 15]
+        for i in range(0, len(data_list), 25):
+            split_data = data_list[i:i + 25]
 
-            for j in range(0, len(split_data), 3):
-                data_batch = split_data[j:j + 3]
+            for j in range(0, len(split_data), 5):
+                data_batch = split_data[j:j + 5]
 
                 for data in data_batch:
                     with lock:
@@ -213,6 +212,7 @@ def main(file_path):
                             proxy = proxy_queue.get()
                             proxy_queue.put(proxy)  # 将代理重新放回队列
                     futures.append(process_executor.submit(process_data, data, proxy))
+                    time.sleep(0.1)  # 每次提交任务后稍作延时，给代理池更新留出时间
 
         for future in as_completed(futures):
             try:
@@ -220,23 +220,24 @@ def main(file_path):
             except Exception as exc:
                 print(f'产生了一个异常: {exc}')
 
+    # 保证主线程等待所有任务完成
+    updater_thread.join(5)
+
 
 # 主函数
 if __name__ == "__main__":
-    url = 'https://daqing.anjuke.com/prop/view/R3560258284250122?auction=201&hpType=1&entry=136&position=25&kwtype=comm_one&now_time=1717939798&spread=commsearch_p&from=PC_COMM_ESF_LIST_CLICK&index=25'
-    get_detail('x', url, '117.28.40.106:42122')
-    # file_path = '小区二手房大于100的小区1_3.xlsx'
-    # main(file_path)
-    #
-    # df_out = pd.DataFrame(a, columns=['房屋编码', '城市', '行政区', '所属区域', '小区名称', '地址', '建筑面积（㎡）',
-    #                                   '所在层', '总层数', '房屋户型',
-    #                                   '户型结构', '房屋结构', '装修状况', '建筑形式', '房屋用途', '建成年份',
-    #                                   '房屋朝向', '楼户比例', '发布时间',
-    #                                   '更新时间', '经纪公司', '经纪人', '房本年限', '产权所属', '产权类型', '有无大税',
-    #                                   '房龄', '小区户数',
-    #                                   '物业类型', '房屋售价（万元）', '单价（元 /㎡）', '链接地址'
-    #                                   ])
-    # df_out.to_excel('详细数据.xlsx')
-    # print(f'链接获取错误数据：{len(error_data_link)}')
-    # df_out_error = pd.DataFrame(error_data_link, columns=['城市', '小区', '链接'])
-    # df_out_error.to_excel('异常数据.xlsx')
+    file_path = '小区二手房大于100的小区1_3.xlsx'
+    main(file_path)
+
+    # 将处理后的数据保存到Excel文件
+    df_out = pd.DataFrame(a, columns=['房屋编码', '城市', '行政区', '所属区域', '小区名称', '地址', '建筑面积（㎡）',
+                                      '所在层', '总层数', '房屋户型', '户型结构', '房屋结构', '装修状况', '建筑形式',
+                                      '房屋用途', '建成年份', '房屋朝向', '楼户比例', '发布时间', '更新时间',
+                                      '经纪公司', '经纪人', '房本年限', '产权所属', '产权类型', '有无大税',
+                                      '房龄', '小区户数', '物业类型', '房屋售价（万元）', '单价（元 /㎡）',
+                                      '链接地址', '营业执照'])
+    df_out.to_excel('详细数据.xlsx')
+
+    print(f'链接获取错误数据：{len(error_data_link)}')
+    df_out_error = pd.DataFrame(error_data_link, columns=['城市', '小区', '链接'])
+    df_out_error.to_excel('异常数据.xlsx')
