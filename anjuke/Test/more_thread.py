@@ -24,8 +24,9 @@ def get_detail(city, url, proxy):
         'Connection': 'keep-alive'
     }
 
-    conn = http.client.HTTPSConnection(proxy)
-    conn.set_tunnel(parsed_url.hostname)  # 设置隧道连接到目标主机
+    conn = http.client.HTTPSConnection(parsed_url.hostname)
+    # conn = http.client.HTTPSConnection(proxy)
+    # conn.set_tunnel(parsed_url.hostname)  # 设置隧道连接到目标主机
     conn.request("GET", url, headers=headers)
     res = conn.getresponse()
     data = res.read()
@@ -42,8 +43,10 @@ def get_detail(city, url, proxy):
     community_name = soup.select_one('#__layout .banner-breadCrumbs a:nth-child(5)')
     community_name = community_name.get_text() if community_name else ''
 
-    area = soup.select_one('#__layout .maininfo-model-strong i')
-    area = area.get_text() if area else ''
+    area = (soup.find('div', class_='maininfo-model-item maininfo-model-item-2')
+            .find('div', class_='maininfo-model-strong')
+            .find('i', class_='maininfo-model-strong-num'))
+    area = area.text if area else ''
 
     floors = soup.find('div', class_='maininfo-model-weak')
     floors = floors.text if floors else ''
@@ -219,18 +222,20 @@ def main(file_path):
 
 # 主函数
 if __name__ == "__main__":
-    file_path = '小区二手房大于100的小区1_3.xlsx'
-    main(file_path)
-
-    df_out = pd.DataFrame(a, columns=['房屋编码', '城市', '行政区', '所属区域', '小区名称', '地址', '建筑面积（㎡）',
-                                      '所在层', '总层数', '房屋户型',
-                                      '户型结构', '房屋结构', '装修状况', '建筑形式', '房屋用途', '建成年份',
-                                      '房屋朝向', '楼户比例', '发布时间',
-                                      '更新时间', '经纪公司', '经纪人', '房本年限', '产权所属', '产权类型', '有无大税',
-                                      '房龄', '小区户数',
-                                      '物业类型', '房屋售价（万元）', '单价（元 /㎡）', '链接地址'
-                                      ])
-    df_out.to_excel('详细数据.xlsx')
-    print(f'链接获取错误数据：{len(error_data_link)}')
-    df_out_error = pd.DataFrame(error_data_link, columns=['城市', '小区', '链接'])
-    df_out_error.to_excel('异常数据.xlsx')
+    url = 'https://daqing.anjuke.com/prop/view/R3560258284250122?auction=201&hpType=1&entry=136&position=25&kwtype=comm_one&now_time=1717939798&spread=commsearch_p&from=PC_COMM_ESF_LIST_CLICK&index=25'
+    get_detail('x', url, '117.28.40.106:42122')
+    # file_path = '小区二手房大于100的小区1_3.xlsx'
+    # main(file_path)
+    #
+    # df_out = pd.DataFrame(a, columns=['房屋编码', '城市', '行政区', '所属区域', '小区名称', '地址', '建筑面积（㎡）',
+    #                                   '所在层', '总层数', '房屋户型',
+    #                                   '户型结构', '房屋结构', '装修状况', '建筑形式', '房屋用途', '建成年份',
+    #                                   '房屋朝向', '楼户比例', '发布时间',
+    #                                   '更新时间', '经纪公司', '经纪人', '房本年限', '产权所属', '产权类型', '有无大税',
+    #                                   '房龄', '小区户数',
+    #                                   '物业类型', '房屋售价（万元）', '单价（元 /㎡）', '链接地址'
+    #                                   ])
+    # df_out.to_excel('详细数据.xlsx')
+    # print(f'链接获取错误数据：{len(error_data_link)}')
+    # df_out_error = pd.DataFrame(error_data_link, columns=['城市', '小区', '链接'])
+    # df_out_error.to_excel('异常数据.xlsx')
