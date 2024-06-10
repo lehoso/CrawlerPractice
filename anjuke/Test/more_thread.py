@@ -60,8 +60,9 @@ def get_detail(city, url, proxy):
     house_type = soup.find('div', class_='maininfo-model-strong')
     house_type = house_type.text if house_type else ''
 
-    renovation_condition = soup.select_one('#__layout .maininfo-model-weak')
-    renovation_condition = renovation_condition.get_text() if renovation_condition else ''
+    renovation_condition = (soup.find('div', class_='maininfo-model-item maininfo-model-item-2')
+                            .find('i', class_='maininfo-model-weak'))
+    renovation_condition = renovation_condition.text if renovation_condition else ''
 
     purpose_year = soup.select_one('#__layout .maininfo-model-item-3 .maininfo-model-weak')
     purpose_year = purpose_year.get_text() if purpose_year else ''
@@ -123,8 +124,8 @@ def get_detail(city, url, proxy):
         '房屋结构': '',
         '装修状况': renovation_condition,
         '建筑形式': '',
-        '房屋用途': part1,
-        '建成年份': part2,
+        '房屋用途': part2,
+        '建成年份': part1,
         '房屋朝向': asaga,
         '楼户比例': '',
         '发布时间': released,
